@@ -7,10 +7,12 @@ import { Message } from "../types/message";
 
 function formatTime(ts: number) {
     const d = new Date(ts);
-    const day = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-
-    return `${day}, ${time}`;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[d.getMonth()];
+    const dayNum = d.getDate();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${month} ${dayNum}, ${hh}:${mm}`;
 }
 
 function checkTime(prev: Message | null, cur: Message): boolean {
@@ -24,6 +26,11 @@ function checkTime(prev: Message | null, cur: Message): boolean {
 
 export default function MessageList() {
     const { messages } = useChat();
+    const endRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages.length]);
 
     const rendered = useMemo(() => {
         const parts: React.ReactNode[] = [];
@@ -45,6 +52,7 @@ export default function MessageList() {
     return (
         <div className="flex-1 p-6 overflow-y-auto space-y-4 min-h-[420px]">
             {rendered}
+            <div ref={endRef} />
         </div>
     );
 }

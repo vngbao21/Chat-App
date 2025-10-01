@@ -2,6 +2,12 @@
 
 import React from "react";
 
+// Very small markdown renderer supporting:
+// - **bold**, *italic*, `code`
+// - links [text](url)
+// - unordered (-, *) and ordered lists (1.)
+// - line breaks and paragraphs
+
 type Props = {
     text: string;
 };
@@ -23,11 +29,36 @@ function renderInline(line: string): string {
 }
 
 export default function Markdown({ text }: Props) {
+    // Block parsing for lists and paragraphs
     const lines = text.split(/\r?\n/);
     const htmlParts: string[] = [];
     let i = 0;
     while (i < lines.length) {
         const line = lines[i];
+        // Headings: #, ##, ###
+        const headingMatch = /^\s*(#{1,3})\s+(.+)$/.exec(line);
+        if (headingMatch) {
+            const level = headingMatch[1].length;
+            const content = renderInline(headingMatch[2]);
+            const tag = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
+            const cls = level === 1
+                ? 'text-xl font-semibold'
+                : level === 2
+                    ? 'text-lg font-semibold'
+                    : 'text-base font-semibold';
+            htmlParts.push(`<${tag} class="${cls}">${content}<\/${tag}>`);
+            i++;
+            continue;
+        }
+
+        // Blockquote: > text
+        const quoteMatch = /^\s*>\s?(.*)$/.exec(line);
+        if (quoteMatch) {
+            const content = renderInline(quoteMatch[1]);
+            htmlParts.push(`<blockquote class="border-l-2 border-black\/20 dark:border-white\/20 pl-3 italic">${content}<\/blockquote>`);
+            i++;
+            continue;
+        }
         if (/^\s*[-*]\s+/.test(line)) {
             htmlParts.push('<ul class="list-disc pl-5 space-y-1">');
             while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
@@ -58,6 +89,7 @@ export default function Markdown({ text }: Props) {
     }
 
     const html = htmlParts.join("\n");
+    // eslint-disable-next-line react/no-danger
     return <div className="space-y-1" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 

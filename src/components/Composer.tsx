@@ -16,6 +16,38 @@ export default function Composer() {
 
     const hasContent = useMemo(() => text.trim().length > 0 || (drafts && drafts.length > 0), [text, drafts]);
 
+    async function onFilesPicked(files: FileList | null) {
+        if (!files || files.length === 0) return;
+        const list = await addDraftFiles(files);
+        setDrafts((prev: any[]) => [...prev, ...list]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+
+    function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+        const items = e.clipboardData?.files;
+        if (items && items.length > 0) {
+            e.preventDefault();
+            onFilesPicked(items);
+        }
+    }
+
+    function onDrop(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+        if (e.dataTransfer?.files?.length) {
+            onFilesPicked(e.dataTransfer.files);
+        }
+    }
+
+    function onDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+    }
+
+    function removeDraft(id: string) {
+        const toRemove = drafts.filter((d: any) => d.id === id);
+        revokeDraftFiles(toRemove);
+        setDrafts((prev: any[]) => prev.filter((d: any) => d.id !== id));
+    }
+
     function handleSend() {
         if (!hasContent) return;
         sendMessage(text.trim(), drafts);
@@ -67,7 +99,7 @@ export default function Composer() {
 
 
     return (
-        <div className="p-3 border-t border-black/10 shadow-md dark:border-white/10" style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}>
+        <div onDrop={onDrop} onDragOver={onDragOver} className="p-3 border-t border-black/10 shadow-md dark:border-white/10" style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}>
             {drafts && drafts.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                     {drafts.map((d: any) => (
@@ -79,7 +111,7 @@ export default function Composer() {
                                     {d.name}
                                 </div>
                             )}
-                            <button className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs">×</button>
+                            <button onClick={() => removeDraft(d.id)} className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs">×</button>
                         </div>
                     ))}
                 </div>
@@ -106,10 +138,11 @@ export default function Composer() {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             onKeyDown={onKeyDown}
+                            onPaste={onPaste}
                             rows={1}
                         />
 
-                        <input ref={fileInputRef} type="file" multiple hidden />
+                        <input ref={fileInputRef} type="file" multiple hidden onChange={(e) => onFilesPicked(e.target.files)} />
                         <div className="px-3 py-2 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 1" onClick={onH1}>H1</button>

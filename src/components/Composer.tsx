@@ -15,6 +15,7 @@ export default function Composer() {
 
 
     const hasContent = useMemo(() => text.trim().length > 0 || (drafts && drafts.length > 0), [text, drafts]);
+    const hasDrafts = drafts && drafts.length > 0;
 
     async function onFilesPicked(files: FileList | null) {
         if (!files || files.length === 0) return;
@@ -133,7 +134,6 @@ export default function Composer() {
     useEffect(() => () => revokeDraftFiles(drafts), []);
 
 
-    // Helper: wrap selection hoặc insert text
     function wrapSelection(before: string, after: string = before) {
         const textarea = textareaRef.current;
         if (!textarea) return;
@@ -163,7 +163,7 @@ export default function Composer() {
         }, 0);
     }
 
-    // Helper: xử lý line-based formatting (heading, quote, list)
+
     function applyLinePrefix(prefix: string) {
         const textarea = textareaRef.current;
         if (!textarea) return;
@@ -226,25 +226,32 @@ export default function Composer() {
 
 
     return (
-        <div onDrop={onDrop} onDragOver={onDragOver} className="p-2 sm:p-3 border-t border-black/10 shadow-md dark:border-white/10" style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}>
-            {drafts && drafts.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                    {drafts.map((d: any) => (
-                        <div key={d.id} className="relative">
-                            {d.kind === "image" ? (
-                                <img src={d.url} alt={d.name} className="h-20 w-20 object-cover rounded-md" />
-                            ) : (
-                                <div className="h-20 w-32 rounded-md bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs px-2 text-center">
-                                    {d.name}
-                                </div>
-                            )}
-                            <button onClick={() => removeDraft(d.id)} className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs">×</button>
-                        </div>
-                    ))}
-                </div>
-            )}
-            <div className="relative rounded-2xl bg-white dark:bg-black/40 border-2 dark:border-white/15">
-                <div className="flex flex-col w-full">
+        <div
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            className={"p-4 sm:p-6 border-t border-black/10 shadow-md dark:border-white/10"}
+            style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}
+        >
+            <div
+                className={"relative rounded-2xl bg-white dark:bg-black/40 border-2 dark:border-white/15 flex flex-col transition-all duration-200"}
+            >
+                {hasDrafts && (
+                    <div className="flex flex-wrap gap-2 mb-2 max-h-24 overflow-y-auto no-scrollbar p-2">
+                        {drafts.map((d: any) => (
+                            <div key={d.id} className="relative">
+                                {d.kind === "image" ? (
+                                    <img src={d.url} alt={d.name} className="h-20 w-20 object-cover rounded-md" />
+                                ) : (
+                                    <div className="h-20 w-32 rounded-md bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs px-2 text-center">
+                                        {d.name}
+                                    </div>
+                                )}
+                                <button onClick={() => removeDraft(d.id)} className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-6 h-6 text-xs">×</button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className="flex flex-col w-full flex-1">
                     <div className="flex items-center gap-1 px-1 sm:px-3 pt-1 sm:pt-2 pb-1 text-sm sm:text-base border-b border-black/10 dark:border-white/15 overflow-x-auto no-scrollbar">
                         <div className="flex items-center gap-1 gap-y-1 flex-wrap">
                             <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded font-semibold" title="Bold (Ctrl+B)" onClick={onBold}>B</button>

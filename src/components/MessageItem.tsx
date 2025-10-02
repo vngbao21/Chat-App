@@ -39,7 +39,7 @@ export default function MessageItem({ m }: { m: Message }) {
     const hasText = Boolean(m.text && m.text.trim().length > 0);
     const hasAttachments = Boolean(m.attachments && m.attachments.length > 0);
     return (
-        <div className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+        <div className={`flex gap-2 ${mine ? "justify-end" : "justify-start"}`}>
             {!mine && (
                 <div className="w-8 h-8 text-xs rounded-full bg-gray-300 text-white flex items-center justify-center">M</div>
             )}

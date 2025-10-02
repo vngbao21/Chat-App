@@ -36,21 +36,22 @@ export default function MessageList() {
         const parts: React.ReactNode[] = [];
         let prev: Message | null = null;
         for (const m of messages) {
-            if (checkTime(prev, m)) {
+            const shouldShowTime = checkTime(prev, m);
+            if (shouldShowTime) {
                 parts.push(
                     <div key={`sep-${m.id}`} className="text-center text-gray-600 text-sm my-2">
                         {formatTime(m.createdAt)}
                     </div>
                 );
+                prev = m;
             }
             parts.push(<MessageItem key={m.id} m={m} />);
-            prev = m;
         }
         return parts;
     }, [messages]);
 
     return (
-        <div className="flex-1 p-6 overflow-y-auto space-y-4 min-h-[420px]">
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 min-h-[420px]">
             {rendered}
             <div ref={endRef} />
         </div>

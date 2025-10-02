@@ -66,36 +66,96 @@ export default function Composer() {
     useEffect(() => () => revokeDraftFiles(drafts), []);
 
 
+    // Helper: wrap selection hoặc insert text
     function wrapSelection(before: string, after: string = before) {
-        const el = textareaRef.current;
-        if (!el) return;
-        const start = el.selectionStart ?? 0;
-        const end = el.selectionEnd ?? 0;
-        const value = text;
-        const selected = value.slice(start, end);
-        const next = value.slice(0, start) + before + selected + after + value.slice(end);
-        setText(next);
-        // restore selection to inside tokens
-        const cursorStart = start + before.length;
-        const cursorEnd = cursorStart + selected.length;
-        requestAnimationFrame(() => {
-            el.focus();
-            el.setSelectionRange(cursorStart, cursorEnd);
-        });
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = text.substring(start, end);
+        const beforeText = text.substring(0, start);
+        const afterText = text.substring(end);
+
+        let newText: string;
+        let newCursorPos: number;
+
+        if (selectedText) {
+            newText = beforeText + before + selectedText + after + afterText;
+            newCursorPos = start + before.length + selectedText.length + after.length;
+        } else {
+            const placeholder = "text";
+            newText = beforeText + before + placeholder + after + afterText;
+            newCursorPos = start + before.length + placeholder.length;
+        }
+
+        setText(newText);
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
     }
 
+    // Helper: xử lý line-based formatting (heading, quote, list)
+    function applyLinePrefix(prefix: string) {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        const beforeCursor = text.substring(0, start);
+        const afterCursor = text.substring(end);
+
+        const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+        const lineEndInAfter = afterCursor.indexOf('\n');
+        const lineEnd = lineEndInAfter === -1 ? text.length : end + lineEndInAfter;
+
+        const selectedLines = text.substring(lineStart, lineEnd);
+        const lines = selectedLines.split('\n');
+
+        const newLines = lines.map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return line;
+
+            const hasPrefix = line.trimStart().startsWith(prefix);
+            if (hasPrefix) {
+                return line.replace(new RegExp(`^(\\s*)${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '$1');
+            } else {
+                const leadingSpace = line.match(/^\s*/)?.[0] || '';
+                return leadingSpace + prefix + line.trimStart();
+            }
+        });
+
+        const newSelectedText = newLines.join('\n');
+        const newText = text.substring(0, lineStart) + newSelectedText + text.substring(lineEnd);
+
+        setText(newText);
+        setTimeout(() => {
+            textarea.focus();
+            const newCursorPos = lineStart + newSelectedText.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    }
+
+    // Formatting functions
     function onBold() { wrapSelection("**"); }
     function onItalic() { wrapSelection("*"); }
+    function onStrikethrough() { wrapSelection("~~"); }
     function onCodeInline() { wrapSelection("`"); }
-    function onLink() { wrapSelection("[", "](https://)"); }
-    function onBullet() { wrapSelection("- ", ""); }
-    function onNumbered() { wrapSelection("1. ", ""); }
-    function onQuote() { wrapSelection("> ", ""); }
-    function onH1() { wrapSelection("# ", ""); }
-    function onH2() { wrapSelection("## ", ""); }
+    function onLink() { wrapSelection("[", "](url)"); }
+    function onBullet() { applyLinePrefix("- "); }
+    function onNumbered() { applyLinePrefix("1. "); }
+    function onQuote() { applyLinePrefix("> "); }
+    function onH1() { applyLinePrefix("# "); }
+    function onH2() { applyLinePrefix("## "); }
+
     function cycleTextSize() {
         setTextSize((prev) => (prev === "sm" ? "md" : prev === "md" ? "lg" : "sm"));
     }
+
+    const textSizeClass = textSize === "sm" ? "text-sm" : textSize === "md" ? "text-base" : "text-lg";
+
 
 
     return (
@@ -119,15 +179,18 @@ export default function Composer() {
             <div className="relative rounded-2xl bg-white dark:bg-black/40 border-2 dark:border-white/15">
                 <div className="flex flex-col w-full">
                     <div className="flex items-center gap-1 px-3 pt-2 pb-1 text-base border-b border-black/10 dark:border-white/15">
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded font-semibold" title="Bold" onClick={onBold}>B</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded italic" title="Italic" onClick={onItalic}>I</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded line-through" title="Strikethrough" onClick={onCodeInline}>S</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Link" onClick={onLink}>📎</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Bulleted list" onClick={onBullet}>☰</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Numbered list" onClick={onNumbered}>≡</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Quote" onClick={onQuote}>❝❞</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded font-semibold" title="Bold (Ctrl+B)" onClick={onBold}>B</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded italic" title="Italic (Ctrl+I)" onClick={onItalic}>I</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded line-through" title="Strikethrough" onClick={onStrikethrough}>S</button>
                         <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Code" onClick={onCodeInline}>⟨/⟩</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Text size" onClick={cycleTextSize}>Aa</button>
+                        <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Link" onClick={onLink}>🔗</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Bulleted list" onClick={onBullet}>•</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Numbered list" onClick={onNumbered}>1.</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Quote" onClick={onQuote}>❝</button>
+                        <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 1" onClick={onH1}>H1</button>
+                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 2" onClick={onH2}>H2</button>
 
                     </div>
                     <div className="relative">
@@ -145,10 +208,8 @@ export default function Composer() {
                         <input ref={fileInputRef} type="file" multiple hidden onChange={(e) => onFilesPicked(e.target.files)} />
                         <div className="px-3 py-2 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 1" onClick={onH1}>H1</button>
-                                <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 2" onClick={onH2}>H2</button>
-                                <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Attach file" onClick={() => fileInputRef.current?.click()}>🔗</button>
-
+                                <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Text size" onClick={cycleTextSize}>Aa</button>
+                                <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Attach file" onClick={() => fileInputRef.current?.click()}>📎</button>
                             </div>
                             <button
                                 type="button"

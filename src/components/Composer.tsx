@@ -55,11 +55,78 @@ export default function Composer() {
         setDrafts([]);
     }
 
-    // send with Enter, newline with Shift+Enter
+    // Keyboard shortcuts + send with Enter (newline with Shift+Enter)
     function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+        const isMod = e.ctrlKey || e.metaKey;
+
+        // Formatting shortcuts
+        if (isMod) {
+            // Bold: Ctrl/Cmd + B
+            if (e.key.toLowerCase() === "b") {
+                e.preventDefault();
+                onBold();
+                return;
+            }
+            // Italic: Ctrl/Cmd + I
+            if (e.key.toLowerCase() === "i") {
+                e.preventDefault();
+                onItalic();
+                return;
+            }
+            // Link: Ctrl/Cmd + K
+            if (e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                onLink();
+                return;
+            }
+            // Inline code: Ctrl/Cmd + `
+            if (e.key === "`") {
+                e.preventDefault();
+                onCodeInline();
+                return;
+            }
+            // Strikethrough: Ctrl/Cmd + Shift + X (common in editors)
+            if (e.shiftKey && e.key.toLowerCase() === "x") {
+                e.preventDefault();
+                onStrikethrough();
+                return;
+            }
+            // Numbered list: Ctrl/Cmd + Shift + 7
+            if (e.shiftKey && e.key === "7") {
+                e.preventDefault();
+                onNumbered();
+                return;
+            }
+            // Bulleted list: Ctrl/Cmd + Shift + 8
+            if (e.shiftKey && e.key === "8") {
+                e.preventDefault();
+                onBullet();
+                return;
+            }
+            // Quote: Ctrl/Cmd + Shift + 9
+            if (e.shiftKey && e.key === "9") {
+                e.preventDefault();
+                onQuote();
+                return;
+            }
+            // Headings: Ctrl/Cmd + Alt + 1/2
+            if (e.altKey && e.key === "1") {
+                e.preventDefault();
+                onH1();
+                return;
+            }
+            if (e.altKey && e.key === "2") {
+                e.preventDefault();
+                onH2();
+                return;
+            }
+        }
+
+        // Send on Enter (but allow newline with Shift+Enter)
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+            return;
         }
     }
 
@@ -159,7 +226,7 @@ export default function Composer() {
 
 
     return (
-        <div onDrop={onDrop} onDragOver={onDragOver} className="p-3 border-t border-black/10 shadow-md dark:border-white/10" style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}>
+        <div onDrop={onDrop} onDragOver={onDragOver} className="p-2 sm:p-3 border-t border-black/10 shadow-md dark:border-white/10" style={{ boxShadow: "2px 2px 6px rgba(0,0,0,0.2)" }}>
             {drafts && drafts.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                     {drafts.map((d: any) => (
@@ -178,25 +245,26 @@ export default function Composer() {
             )}
             <div className="relative rounded-2xl bg-white dark:bg-black/40 border-2 dark:border-white/15">
                 <div className="flex flex-col w-full">
-                    <div className="flex items-center gap-1 px-3 pt-2 pb-1 text-base border-b border-black/10 dark:border-white/15">
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded font-semibold" title="Bold (Ctrl+B)" onClick={onBold}>B</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded italic" title="Italic (Ctrl+I)" onClick={onItalic}>I</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded line-through" title="Strikethrough" onClick={onStrikethrough}>S</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Code" onClick={onCodeInline}>⟨/⟩</button>
-                        <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Link" onClick={onLink}>🔗</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Bulleted list" onClick={onBullet}>•</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Numbered list" onClick={onNumbered}>1.</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Quote" onClick={onQuote}>❝</button>
-                        <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 1" onClick={onH1}>H1</button>
-                        <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 2" onClick={onH2}>H2</button>
-
+                    <div className="flex items-center gap-1 px-1 sm:px-3 pt-1 sm:pt-2 pb-1 text-sm sm:text-base border-b border-black/10 dark:border-white/15 overflow-x-auto no-scrollbar">
+                        <div className="flex items-center gap-1 gap-y-1 flex-wrap">
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded font-semibold" title="Bold (Ctrl+B)" onClick={onBold}>B</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded italic" title="Italic (Ctrl+I)" onClick={onItalic}>I</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded line-through" title="Strikethrough" onClick={onStrikethrough}>S</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Code" onClick={onCodeInline}>⟨/⟩</button>
+                            <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Link" onClick={onLink}>🔗</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Bulleted list" onClick={onBullet}>•</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Numbered list" onClick={onNumbered}>1.</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Quote" onClick={onQuote}>❝</button>
+                            <span className="w-px h-6 bg-black/10 dark:bg-white/15 mx-1"></span>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 1" onClick={onH1}>H1</button>
+                            <button className="px-1.5 py-1 sm:px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Heading 2" onClick={onH2}>H2</button>
+                        </div>
                     </div>
                     <div className="relative">
                         <textarea
                             ref={textareaRef}
-                            className={`w-full resize-none px-3 py-3 min-h-[60px] max-h-32 focus:outline-none bg-transparent ${textSize === "sm" ? "text-sm" : textSize === "lg" ? "text-lg" : "text-base"}`}
+                            className={`w-full no-scrollbar resize-none px-3 py-3 min-h-[60px] max-h-32 focus:outline-none bg-transparent ${textSize === "sm" ? "text-sm" : textSize === "lg" ? "text-lg" : "text-base"}`}
                             placeholder="Type your message here"
                             value={text}
                             onChange={(e) => setText(e.target.value)}
@@ -206,7 +274,8 @@ export default function Composer() {
                         />
 
                         <input ref={fileInputRef} type="file" multiple hidden onChange={(e) => onFilesPicked(e.target.files)} />
-                        <div className="px-3 py-2 flex items-center justify-between">
+                        <div className="px-2 sm:px-3 py-2 flex items-center justify-between">
+
                             <div className="flex items-center gap-2">
                                 <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Text size" onClick={cycleTextSize}>Aa</button>
                                 <button className="px-2 py-1 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Attach file" onClick={() => fileInputRef.current?.click()}>📎</button>
@@ -215,7 +284,8 @@ export default function Composer() {
                                 type="button"
                                 disabled={!hasContent}
                                 onClick={handleSend}
-                                className={`absolute bottom-3 right-3 p-2 rounded ${hasContent ? "text-blue-600 hover:bg-blue-50 " : "text-gray-400 cursor-not-allowed"}`}
+                                className={`p-2 rounded sm:absolute sm:bottom-3 sm:right-3 ${hasContent ? "text-blue-600 hover:bg-blue-50 " : "text-gray-400 cursor-not-allowed"}`}
+
                                 title="Send message"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

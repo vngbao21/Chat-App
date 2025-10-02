@@ -51,7 +51,7 @@ export default function MessageList() {
     }, [messages]);
 
     return (
-        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 min-h-[420px]">
+        <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-6 space-y-3 sm:space-y-4 min-h-[420px]">
             {rendered}
             <div ref={endRef} />
         </div>

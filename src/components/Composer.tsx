@@ -223,8 +223,6 @@ export default function Composer() {
 
     const textSizeClass = textSize === "sm" ? "text-sm" : textSize === "md" ? "text-base" : "text-lg";
 
-
-
     return (
         <div
             onDrop={onDrop}

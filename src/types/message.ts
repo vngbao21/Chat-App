@@ -9,12 +9,19 @@ export type Attachment = {
     mime: string;
 };
 
+export type Reaction = {
+    emoji: string;
+    userId: string;
+    displayName?: string;
+};
+
 export type Message = {
     id: string;
     author: "me" | "other";
     text: string;
     createdAt: number; // epoch ms
     attachments?: Attachment[];
+    reactions?: Reaction[];
 };
 
 export type DraftAttachment = Attachment & { file: File }; // status (when not sent)

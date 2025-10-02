@@ -1,13 +1,15 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState, useCallback } from "react";
-import { Attachment, Message, DraftAttachment } from "../types/message";
+import { Attachment, Message, DraftAttachment, Reaction } from "../types/message";
 
 type ChatContextValue = {
     messages: Message[];
     sendMessage: (text: string, attachments?: DraftAttachment[]) => void;
     addDraftFiles: (files: FileList | File[]) => Promise<DraftAttachment[]>;
     revokeDraftFiles: (drafts: DraftAttachment[]) => void;
+    addReaction: (messageId: string, reaction: Reaction) => void;
+    removeReaction: (messageId: string, userId: string, emoji: string) => void;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -39,6 +41,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         author: "other",
         text: "Hey! Are you here?",
         createdAt: Date.now() - 1000 * 60 * 60 * 24,
+        reactions: [],
     }]);
 
     const sendMessage = useCallback((text: string, attachments?: DraftAttachment[]) => {
@@ -51,6 +54,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 text,
                 createdAt: Date.now(),
                 attachments: atts && atts.length ? atts : undefined,
+                reactions: [],
             },
         ]);
     }, []);
@@ -65,6 +69,34 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         drafts.forEach(d => URL.revokeObjectURL(d.url));
     }, []);
 
-    const value = useMemo(() => ({ messages, sendMessage, addDraftFiles, revokeDraftFiles }), [messages, sendMessage, addDraftFiles, revokeDraftFiles]);
+    const addReaction = (messageId: string, reaction: Reaction) => {
+        setMessages((prev) =>
+            prev.map((m) =>
+                m.id === messageId
+                    ? {
+                        ...m,
+                        reactions: [
+                            ...(m.reactions ?? []).filter(
+                                (r) => !(r.userId === reaction.userId && r.emoji === reaction.emoji)
+                            ),
+                            reaction,
+                        ],
+                    }
+                    : m
+            )
+        );
+    };
+
+    const removeReaction = (messageId: string, userId: string, emoji: string) => {
+        setMessages((prev) =>
+            prev.map((m) =>
+                m.id === messageId
+                    ? { ...m, reactions: (m.reactions ?? []).filter((r) => !(r.userId === userId && r.emoji === emoji)) }
+                    : m
+            )
+        );
+    };
+
+    const value = useMemo(() => ({ messages, sendMessage, addDraftFiles, revokeDraftFiles, addReaction, removeReaction }), [messages, sendMessage, addDraftFiles, revokeDraftFiles, addReaction, removeReaction]);
     return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }

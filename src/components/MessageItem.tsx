@@ -2,6 +2,9 @@
 
 import Markdown from "./Markdown";
 import { Attachment, Message } from "../types/message";
+import { useChat } from "../context/ChatContext";
+import { useState } from "react";
+
 
 function formatTime(ts: number) {
     const d = new Date(ts);
@@ -38,12 +41,27 @@ export default function MessageItem({ m }: { m: Message }) {
     const mine = m.author === "me";
     const hasText = Boolean(m.text && m.text.trim().length > 0);
     const hasAttachments = Boolean(m.attachments && m.attachments.length > 0);
+    const { addReaction, removeReaction } = useChat();
+    const [showReactions, setShowReactions] = useState(false);
+
+    const throwReaction = (emoji: string) => {
+        const userId = "me"; // demo 
+        const exists = m.reactions?.some((r) => r.userId === userId && r.emoji === emoji);
+        if (exists) {
+            removeReaction(m.id, userId, emoji);
+        } else {
+            addReaction(m.id, { emoji, userId, displayName: "You" });
+        }
+    };
+
     return (
         <div className={`flex gap-2 ${mine ? "justify-end" : "justify-start"}`}>
             {!mine && (
                 <div className="w-8 h-8 text-xs rounded-full bg-gray-300 text-white flex items-center justify-center">M</div>
             )}
-            <div className="relative group max-w-[88%] sm:max-w-[80%] space-y-2">
+            <div className="relative group max-w-[88%] sm:max-w-[80%] space-y-2"
+                onMouseEnter={() => setShowReactions(true)}
+                onMouseLeave={() => setShowReactions(false)}>
                 {hasText && (
                     <div className={`rounded-md px-3 py-2 shadow-sm ${mine ? "bg-blue-600 text-white" : "bg-black/5 border-2"}`}>
                         <Markdown text={m.text as string} />
@@ -64,6 +82,41 @@ export default function MessageItem({ m }: { m: Message }) {
                         {formatTime(m.createdAt)}
                     </div>
                 </div>
+
+                {/* Reactions list */}
+                {m.reactions && m.reactions.length > 0 && (
+                    <div className="flex gap-2 mt-1">
+                        {m.reactions.map((r, idx) => (
+                            <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded-full bg-gray-100 text-sm cursor-pointer hover:bg-gray-200"
+                                title={r.displayName ?? r.userId}
+                                onClick={() => throwReaction(r.emoji)}
+                            >
+                                {r.emoji}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Emoji picker on hover */}
+                {showReactions && (
+                    <div
+                        className={`absolute -top-8 flex gap-1 bg-white border rounded-md shadow p-1 m-1 ${mine ? "right-0" : "left-0"}`}
+                    >
+                        {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => (
+                            <button
+                                key={emoji}
+                                onClick={() => throwReaction(emoji)}
+                                className="hover:bg-gray-100 rounded px-1"
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+
             </div>
 
         </div>

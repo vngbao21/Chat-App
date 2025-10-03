@@ -19,6 +19,7 @@ export type Message = {
     id: string;
     author: "me" | "other";
     text: string;
+    textSize?: "sm" | "md" | "lg";
     createdAt: number; // epoch ms
     attachments?: Attachment[];
     reactions?: Reaction[];

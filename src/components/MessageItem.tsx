@@ -64,7 +64,7 @@ export default function MessageItem({ m }: { m: Message }) {
                 onMouseLeave={() => setShowReactions(false)}>
                 {hasText && (
                     <div className={`rounded-md px-3 py-2 shadow-sm ${mine ? "bg-blue-600 text-white" : "bg-black/5 border-2"}`}>
-                        <Markdown text={m.text as string} />
+                        <Markdown text={m.text as string} textSize={m.textSize} />
                     </div>
                 )}
                 {hasAttachments && (

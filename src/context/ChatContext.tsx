@@ -5,7 +5,11 @@ import { Attachment, Message, DraftAttachment, Reaction } from "../types/message
 
 type ChatContextValue = {
     messages: Message[];
-    sendMessage: (text: string, attachments?: DraftAttachment[]) => void;
+    sendMessage: (
+        text: string,
+        attachments?: DraftAttachment[],
+        textSize?: "sm" | "md" | "lg"
+    ) => void;
     addDraftFiles: (files: FileList | File[]) => Promise<DraftAttachment[]>;
     revokeDraftFiles: (drafts: DraftAttachment[]) => void;
     addReaction: (messageId: string, reaction: Reaction) => void;
@@ -44,7 +48,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         reactions: [],
     }]);
 
-    const sendMessage = useCallback((text: string, attachments?: DraftAttachment[]) => {
+    const sendMessage = useCallback((text: string, attachments?: DraftAttachment[], textSize?: "sm" | "md" | "lg") => {
         const atts: Attachment[] | undefined = attachments?.map(({ file: _f, ...rest }) => rest);
         setMessages(prev => [
             ...prev,
@@ -55,6 +59,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 createdAt: Date.now(),
                 attachments: atts && atts.length ? atts : undefined,
                 reactions: [],
+                textSize: textSize ?? "md",
             },
         ]);
     }, []);

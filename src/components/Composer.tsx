@@ -51,7 +51,7 @@ export default function Composer() {
 
     function handleSend() {
         if (!hasContent) return;
-        sendMessage(text.trim(), drafts);
+        sendMessage(text.trim(), drafts, textSize);
         setText("");
         setDrafts([]);
     }

@@ -5,6 +5,7 @@ import React from "react";
 type MarkdownProps = {
     text: string;
     className?: string;
+    textSize?: "sm" | "md" | "lg";
 };
 
 function escapeHtml(input: string): string {
@@ -42,9 +43,10 @@ function renderInline(line: string): string {
     return out;
 }
 
-export default function Markdown({ text, className = "" }: MarkdownProps) {
+export default function Markdown({ text, className = "", textSize = "md" }: MarkdownProps) {
     const lines = text.split(/\r?\n/);
     const htmlParts: string[] = [];
+    const textSizeClass = textSize === "sm" ? "text-sm" : textSize === "md" ? "text-base" : "text-lg";
     let i = 0;
 
     while (i < lines.length) {
@@ -112,5 +114,5 @@ export default function Markdown({ text, className = "" }: MarkdownProps) {
     }
 
     const html = htmlParts.join("\n");
-    return <div className={`space-y-1 break-words whitespace-pre-wrap ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
+    return <div className={`space-y-1 break-words whitespace-pre-wrap ${textSizeClass} ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
 }

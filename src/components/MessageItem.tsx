@@ -76,7 +76,7 @@ export default function MessageItem({ m }: { m: Message }) {
                 )}
                 {/* Hover time badge - anchored to bubble container */}
                 <div
-                    className={`absolute bottom-0 ${mine ? "right-full ml-2" : "left-full mr-2"} hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity`}
+                    className={`absolute bottom-0 ${mine ? "right-full ml-2" : "left-full mr-2"} block opacity-0 group-hover:opacity-100 transition-opacity`}
                 >
                     <div className="px-2 py-0.5 rounded-xs text-xs bg-gray-200 dark:bg-white/15 text-gray-700 dark:text-gray-200 shadow whitespace-nowrap">
                         {formatTime(m.createdAt)}
